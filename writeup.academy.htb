@@ -1,0 +1,49 @@
+## Found problem in the registration page 
+                <input type="hidden" value="0" name="roleid" />
+## Used Burp to manipulate roleid to 1 
+
+## used fuzzing to find files on the server: 
+admin
+index
+register
+login
+
+## tried to enter admin page with initial registeration without success. Then tried with manipulated id of roleid 1, got access found 2 more informations:
+user: cry0l1t3 / mrb3n
+subdomain/VHOST: dev-staging-01.academy.htb/
+
+## tried to access webpage via dev-staging-01.academy.htb got some error, got to know that this could be a vhost and was running LARAVEL framework, was exposing app_key in the error
+## Searched google for laravel exploit found an exploit in Metasploit whihc gives access remotely thanks to app_key 
+## after gaining access via msfconsole, spawned interactive bash using python ...
+python3 -c "import pty;pty.spawn('/bin/bash')" 
+
+## started looking around in /var/www/html folder ... found env file in academy folder which contained a password for DB
+db Password: mySup3rP4s5w0rd!!
+
+## Tried password for both the usernames found above using su the password worked for cry0l1t3, dumped msfconsole and switched to ssh 
+ssh cry0l1t3@academy.htb
+
+## Got user flag 
+## got no access to /root directory 
+## there is a script file in the home of the user...
+## tried to run it but wasnt that easy 
+## tried to Google around 
+## found that if the other user used su selinux might have saved it 
+## can cd ls and cat /var/log  
+## SELINUX stores /var/log/audit 
+## cat * | grep 'comm="su"' revealed 
+type=TTY msg=audit(1597199293.906:84): tty pid=2520 uid=1002 auid=0 ses=1 major=4 minor=1 comm="su" data=6D7262336E5F41634064336D79210A
+
+## data is HEX encoded, did an online decoding and got this value 
+mrb3n_Ac@d3my!
+## looks like password for other user tried to login other user now 
+ssh mrb3n@academy.htb
+mrb3n_Ac@d3my!
+
+## no files in user's folder but the user can sudo time for google to see if can do anything 
+## After looking around for a while found a website and some reference of what to do to escalate privelege
+
+GTFObins 
+Composer -> sudo 
+
+## GOt root access and access to /root docs and the FLAG!!!
