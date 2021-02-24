@@ -1,0 +1,49 @@
+- Started with running nmap on laboratory.htb with following flags 
+     nmap -sC -sV -A -v --disable-arp-ping 10.10.10.216 
+
+- Started browsing laboratory.htb whilenmap is running... Found nothing of importance
+
+- NMAP returned a strange result in port/443 it says something Subject Alternative Name: DNS:git.laboratory.htb, looks like another website may be hosted...
+  yep there is another website on the server. 
+  
+- website is https, looks like a login page and registration page.
+
+- Tried to BURP but no use, also registeration doesn't allows anything other than @laboratory.htb email 
+
+- Browsing the website 
+
+- Its a Gitlab version 12.8.1. searching some exploit...
+
+- after lot of searching found a website https://github.com/thewhiteh4t/cve-2020-10977 but the code was buggy, tried to debug and wasted a lot of time on it, gave up on the same and searched again and found orignal VCE https://hackerone.com/reports/827052 did as was listed and got /etc/passwd values.
+
+- /etc/passwd did not help,,, used metasploit multi/http/gitlab_file_read_rce to gain access to shell had to change payload to ruby/shell_reverse_tcp 
+
+- after gaining access to reverse shell used perl [perl -e 'exec "/bin/sh";'] to gain interactive shell as python was not working on the system. 
+
+- Initiated a simple HTTP server using python on local system to transfer lse.sh to the remote
+
+- lse.sh  showed that this is a docker image and we will need actual machine to gain access and read files, so going back to gitlab for information.
+
+- pwd shows that this is a gitlab-rails and searched for same on Google to understand that there is a console available to configure it using [gitlab-rails console]
+
+- trying to see what users are available for this using id, User.find(0), User.find(1) ... found dexter user at 1 
+
+- using available document of gitlab-rails to reset the password for user dexter to gain access to gitlab website. 
+user = User.find(1)
+user.password = <new pass>
+user.password_confirmation = <new pass repeat>
+user.save
+
+- got access to dexter found a folder labelled CONFIDENTIAL 
+
+- browsing thru folder found .ssh folder containing id_rsa, could be ssh private key of the dexter user
+
+- trying to access ssh with key got above to the server, got access 
+
+- GOT USER FLAG!!!
+
+- using lse.sh same way as above to check if can find anything
+
+- found a unique file /usr/local/bin/docker-security with suid privelege 
+
+- 
